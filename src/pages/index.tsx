@@ -1,32 +1,33 @@
 import { type NextPage } from "next";
 import { useEffect, useReducer, useState } from "react";
-
-const ROWS = 20;
-const COLS = 20;
+import { ROWS, COLS } from "../constants";
 
 type PlayerLocation = {
   row: number;
   col: number;
+  prevRow: number;
+  prevCol: number;
 };
 
 type PlayerMovement = { row: number } | { col: number };
 
 type TMapCell = {
-  colour: string;
+  bgColor: string;
 };
 
 const initialCell = {
-  colour: "bg-white",
+  bgColor: "bg-white",
+  fgColor: "bg-white",
   value: 0,
+  player: false,
 };
 
 const Home: NextPage = () => {
-  const [cell, setCell] = useState(
+  const [gameMap, setGameMap] = useState(
     new Array<TMapCell>(ROWS)
       .fill(initialCell)
       .map(() => new Array<TMapCell>(COLS).fill(initialCell))
   );
-
   const [playerState, updatePlayerState] = useReducer(
     (state: PlayerLocation, action: PlayerMovement) => {
       // if player is out of the map, don't update
@@ -46,27 +47,58 @@ const Home: NextPage = () => {
           return state;
         }
 
+        newState.prevRow = state.row;
+        newState.prevCol = state.col;
         newState.row += action.row;
       } else {
         if (state.col + action.col < 0 || state.col + action.col >= COLS) {
           return state;
         }
 
+        newState.prevRow = state.row;
+        newState.prevCol = state.col;
         newState.col += action.col;
       }
 
       return newState;
     },
-    {
-      row: Math.floor(Math.random() * (ROWS - 1)),
-      col: Math.floor(Math.random() * (COLS - 1)),
+    {},
+    () => {
+      const newState = {
+        row: Math.floor(Math.random() * (ROWS - 1)),
+        col: Math.floor(Math.random() * (COLS - 1)),
+        prevRow: 0,
+        prevCol: 0,
+      };
+      newState.prevRow = newState.row;
+      newState.prevCol = newState.col;
+      return newState;
     }
   );
 
-  const [colour, setColour] = useState("bg-red-500");
-
   // game loop
   useEffect(() => {
+    const mapLogic = (playerLocation: PlayerLocation): void => {
+      if (
+        playerLocation.row < 0 ||
+        playerLocation.col < 0 ||
+        playerLocation.row >= ROWS ||
+        playerLocation.col >= COLS
+      )
+        return;
+
+      setGameMap((prevState) => {
+        const newState: TMapCell[][] = [...prevState];
+
+        newState[playerLocation.prevRow][playerLocation.prevCol] = {
+          bgColor: "bg-red-500",
+        };
+        newState[playerLocation.row][playerLocation.col] = {
+          bgColor: "bg-black",
+        };
+        return newState;
+      });
+    };
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case "ArrowUp":
@@ -86,36 +118,25 @@ const Home: NextPage = () => {
       }
     };
 
-    cellLogic(playerState.row, playerState.col);
+    mapLogic(playerState);
 
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [playerState.col, playerState.row]);
-
-  const cellLogic = (row: number, col: number): void => {
-    if (row < 0 || col < 0 || row >= ROWS || col >= COLS) return;
-
-    setCell((prevState) => {
-      const newState = [...prevState];
-      console.log(prevState);
-      newState[row][col] = { colour: "bg-red-500" };
-      return newState;
-    });
-  };
+  }, [playerState]);
 
   return (
     <div className="grid grid-flow-col content-center justify-center">
       <div className="aspect-square w-full">
-        {cell.map((row, rIdx) => {
+        {gameMap.map((row, rIdx) => {
           return (
             <div key={rIdx} className="flex">
               {row.map((cell, cIdx) => (
                 <div
                   key={cIdx}
-                  className={`aspect-square w-10 border-2 border-solid ${cell.colour}`}
+                  className={`aspect-square w-10 border-2 border-solid ${cell.bgColor}`}
                 ></div>
               ))}
             </div>
