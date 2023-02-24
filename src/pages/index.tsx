@@ -119,6 +119,8 @@ const Home = () => {
       }
     };
 
+    console.log(playerState)
+
     mapLogic(playerState);
 
     window.addEventListener("keydown", handleKeyDown);
@@ -138,7 +140,7 @@ const Home = () => {
                 {row.map((cell, cIdx) => (
                   <div
                     key={cIdx}
-                    className={`aspect-square w-10 border-2 border-solid bg-[${cell.bgColor}]`}
+                    className={`aspect-square w-10 border-2 border-solid ${cell.bgColor}`}
                   ></div>
                 ))}
               </div>
