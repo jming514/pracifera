@@ -1,6 +1,6 @@
-import { type NextPage } from "next";
 import { useEffect, useReducer, useState } from "react";
-import { ROWS, COLS } from "../constants";
+import NoSsrWrapper from "../components/no-ssr-wrapper";
+import { ROWS, COLS, PLAYER_COLOR, PAST_PLAYER } from "../constants";
 
 type PlayerLocation = {
   row: number;
@@ -16,13 +16,13 @@ type TMapCell = {
 };
 
 const initialCell = {
-  bgColor: "bg-white",
-  fgColor: "bg-white",
+  bgColor: "#ffffff",
+  fgColor: "#ffffff",
   value: 0,
   player: false,
 };
 
-const Home: NextPage = () => {
+const Home = () => {
   const [gameMap, setGameMap] = useState(
     new Array<TMapCell>(ROWS)
       .fill(initialCell)
@@ -91,10 +91,11 @@ const Home: NextPage = () => {
         const newState: TMapCell[][] = [...prevState];
 
         newState[playerLocation.prevRow][playerLocation.prevCol] = {
-          bgColor: "bg-red-500",
+          bgColor: PAST_PLAYER,
         };
         newState[playerLocation.row][playerLocation.col] = {
-          bgColor: "bg-black",
+          bgColor: PLAYER_COLOR,
+          // bgColor: "#3b82f6",
         };
         return newState;
       });
@@ -128,22 +129,24 @@ const Home: NextPage = () => {
   }, [playerState]);
 
   return (
-    <div className="grid grid-flow-col content-center justify-center">
-      <div className="aspect-square w-full">
-        {gameMap.map((row, rIdx) => {
-          return (
-            <div key={rIdx} className="flex">
-              {row.map((cell, cIdx) => (
-                <div
-                  key={cIdx}
-                  className={`aspect-square w-10 border-2 border-solid ${cell.bgColor}`}
-                ></div>
-              ))}
-            </div>
-          );
-        })}
+    <NoSsrWrapper>
+      <div className="grid grid-flow-col content-center justify-center">
+        <div className="aspect-square w-full">
+          {gameMap.map((row, rIdx) => {
+            return (
+              <div key={rIdx} className="flex">
+                {row.map((cell, cIdx) => (
+                  <div
+                    key={cIdx}
+                    className={`aspect-square w-10 border-2 border-solid bg-[${cell.bgColor}]`}
+                  ></div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </NoSsrWrapper>
   );
 };
 
